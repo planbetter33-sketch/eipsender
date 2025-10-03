@@ -422,17 +422,76 @@
                 }
             }
 
-            connectWallet(walletType) {
+            async connectWallet(walletType) {
                 console.log(`🔗 connectWallet called: ${walletType}`);
                 this.hideWalletModal();
                 this.logStatus(`Connecting to ${walletType}...`, 'info');
                 
-                // Simulate connection process
-                setTimeout(() => {
-                    this.logStatus(`✅ Connected to ${walletType} successfully!`, 'success');
-                    this.logStatus('🎉 Wallet connection test completed!', 'success');
-                    console.log(`✅ Successfully connected to ${walletType}`);
-                }, 1500);
+                try {
+                    // Check if ethereum provider is available
+                    if (typeof window.ethereum === 'undefined') {
+                        this.logStatus('❌ No wallet detected. Please install MetaMask or another wallet.', 'error');
+                        return;
+                    }
+                    
+                    // Request account access
+                    this.logStatus('Requesting wallet access...', 'info');
+                    const accounts = await window.ethereum.request({
+                        method: 'eth_requestAccounts'
+                    });
+                    
+                    if (accounts.length === 0) {
+                        this.logStatus('❌ No accounts found', 'error');
+                        return;
+                    }
+                    
+                    const address = accounts[0];
+                    this.logStatus(`✅ Connected to ${walletType}!`, 'success');
+                    this.logStatus(`📍 Address: ${address}`, 'info');
+                    this.logStatus('🎉 Wallet connection completed!', 'success');
+                    
+                    // Store connection info
+                    this.connectedWallet = {
+                        type: walletType,
+                        address: address,
+                        accounts: accounts
+                    };
+                    
+                    // Update UI to show connected state
+                    this.updateConnectedUI();
+                    
+                    console.log(`✅ Successfully connected to ${walletType}: ${address}`);
+                    
+                } catch (error) {
+                    console.error('❌ Connection failed:', error);
+                    this.logStatus(`❌ Connection failed: ${error.message}`, 'error');
+                    
+                    if (error.code === 4001) {
+                        this.logStatus('User rejected connection request', 'error');
+                    } else if (error.code === -32002) {
+                        this.logStatus('Connection request already pending', 'error');
+                    }
+                }
+            }
+
+            updateConnectedUI() {
+                const connectBtn = document.getElementById('connectBtn');
+                if (connectBtn && this.connectedWallet) {
+                    connectBtn.textContent = `🔗 ${this.connectedWallet.address.slice(0, 6)}...${this.connectedWallet.address.slice(-4)}`;
+                    connectBtn.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
+                    connectBtn.onclick = () => this.disconnectWallet();
+                }
+            }
+            
+            disconnectWallet() {
+                this.connectedWallet = null;
+                const connectBtn = document.getElementById('connectBtn');
+                if (connectBtn) {
+                    connectBtn.textContent = '🔗 Connect Wallet';
+                    connectBtn.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
+                    connectBtn.onclick = () => this.showWalletModal();
+                }
+                this.logStatus('Wallet disconnected', 'info');
             }
 
             logStatus(message, type = 'info') {
