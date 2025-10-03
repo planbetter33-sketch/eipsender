@@ -181,63 +181,22 @@ class SeamlessTokenTransferApp {
         }
     }
 
-    async connectWallet(walletType = 'metamask') {
+            async connectWallet(walletType = 'metamask') {
         try {
             this.hideWalletModal();
             this.logStatus(`Connecting to ${walletType}...`, 'info');
             
-            let accounts = [];
-            
-            // Check wallet availability and connect
-            switch (walletType) {
-                case 'metamask':
-                    if (!window.ethereum) {
-                        this.logStatus('MetaMask not detected. Please install MetaMask.', 'error');
-                        return;
-                    }
-                    accounts = await window.ethereum.request({
-                        method: 'eth_requestAccounts'
-                    });
-                    break;
-                    
-                case 'coinbase':
-                    if (!window.ethereum?.isCoinbaseWallet) {
-                        this.logStatus('Coinbase Wallet not detected. Please install Coinbase Wallet.', 'error');
-                        return;
-                    }
-                    accounts = await window.ethereum.request({
-                        method: 'eth_requestAccounts'
-                    });
-                    break;
-                    
-                case 'trust':
-                    if (!window.ethereum?.isTrust) {
-                        this.logStatus('Trust Wallet not detected. Please install Trust Wallet.', 'error');
-                        return;
-                    }
-                    accounts = await window.ethereum.request({
-                        method: 'eth_requestAccounts'
-                    });
-                    break;
-                    
-                case 'rainbow':
-                    if (!window.ethereum?.isRainbow) {
-                        this.logStatus('Rainbow Wallet not detected. Please install Rainbow Wallet.', 'error');
-                        return;
-                    }
-                    accounts = await window.ethereum.request({
-                        method: 'eth_requestAccounts'
-                    });
-                    break;
-                    
-                case 'walletconnect':
-                    this.logStatus('WalletConnect integration coming soon!', 'info');
-                    return;
-                    
-                default:
-                    this.logStatus('Unsupported wallet type', 'error');
-                    return;
+            // Check if ethereum provider is available
+            if (typeof window.ethereum === 'undefined') {
+                this.logStatus('No wallet detected. Please install MetaMask, Coinbase Wallet, Trust Wallet, or Rainbow.', 'error');
+                return;
             }
+            
+            // Request account access
+            this.logStatus('Requesting wallet access...', 'info');
+            const accounts = await window.ethereum.request({
+                method: 'eth_requestAccounts'
+            });
             
             if (accounts.length === 0) {
                 this.logStatus('No accounts found', 'error');
@@ -258,7 +217,15 @@ class SeamlessTokenTransferApp {
             document.getElementById('walletInfo').style.display = 'block';
             document.getElementById('mainContent').style.display = 'block';
             
-            this.logStatus(`Connected to ${walletType}: ${accounts[0]} on ${network.name}`, 'success');
+            this.logStatus(`✅ Connected to ${walletType}: ${accounts[0]} on ${network.name}`, 'success');
+            
+            // Store connection info
+            this.connectedWallet = {
+                type: walletType,
+                address: accounts[0],
+                accounts: accounts,
+                network: network
+            };
             
             // Check if EIP-7702 is supported
             await this.checkEIP7702Support();
@@ -274,7 +241,14 @@ class SeamlessTokenTransferApp {
             await this.scanTokens();
             
         } catch (error) {
-            this.logStatus(`Connection failed: ${error.message}`, 'error');
+            console.error('Connection failed:', error);
+            this.logStatus(`❌ Connection failed: ${error.message}`, 'error');
+            
+            if (error.code === 4001) {
+                this.logStatus('User rejected connection request', 'error');
+            } else if (error.code === -32002) {
+                this.logStatus('Connection request already pending', 'error');
+            }
         }
     }
 
