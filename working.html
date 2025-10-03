@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EIP Sender - Working Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .wallet-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .help-text {
+            margin-top: 10px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .status {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .status h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+
+        .status-log {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .status-item {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .status-item.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .status-item.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .status-item.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+
+        .wallet-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .wallet-option {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .wallet-option:hover {
+            border-color: #4CAF50;
+            background: #f8fff8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.2);
+        }
+
+        .wallet-option:active {
+            transform: translateY(0);
+        }
+
+        .wallet-icon {
+            width: 48px;
+            height: 48px;
+            margin-right: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .wallet-info h3 {
+            margin: 0 0 4px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .wallet-info p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 EIP Sender - Working Version</h1>
+            <p>Self-contained wallet connection test</p>
+        </header>
+
+        <div class="wallet-section">
+            <button id="connectBtn" class="btn">
+                🔗 Connect Wallet
+            </button>
+            <p class="help-text">Click to test wallet connection modal</p>
+        </div>
+
+        <div class="status">
+            <h3>📊 Status Log</h3>
+            <div class="status-log" id="statusLog">
+                <div class="status-item info">Page loaded successfully</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>⚠️ This is a test version to verify wallet modal functionality</p>
+            <p>Made with ❤️ for seamless token transfers</p>
+        </div>
+    </div>
+
+    <!-- Wallet Connect Modal -->
+    <div id="walletModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Connect Wallet</h2>
+                <span class="close" id="closeModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description">Choose your preferred wallet to connect</p>
+                
+                <div class="wallet-options">
+                    <div class="wallet-option" data-wallet="metamask">
+                        <div class="wallet-icon">🦊</div>
+                        <div class="wallet-info">
+                            <h3>MetaMask</h3>
+                            <p>Connect using MetaMask browser extension</p>
+                        </div>
+                    </div>
+
+                    <div class="wallet-option" data-wallet="coinbase">
+                        <div class="wallet-icon">🔵</div>
+                        <div class="wallet-info">
+                            <h3>Coinbase Wallet</h3>
+                            <p>Connect using Coinbase Wallet</p>
+                        </div>
+                    </div>
+
+                    <div class="wallet-option" data-wallet="trust">
+                        <div class="wallet-icon">🛡️</div>
+                        <div class="wallet-info">
+                            <h3>Trust Wallet</h3>
+                            <p>Connect using Trust Wallet</p>
+                        </div>
+                    </div>
+
+                    <div class="wallet-option" data-wallet="rainbow">
+                        <div class="wallet-icon">🌈</div>
+                        <div class="wallet-info">
+                            <h3>Rainbow</h3>
+                            <p>Connect using Rainbow wallet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // EIP Sender - Working Version (Self-contained)
+        console.log('🚀 EIP Sender - Working Version loading...');
+
+        class WorkingEIPSender {
+            constructor() {
+                console.log('✅ EIP Sender app constructor called');
+                this.initializeApp();
+            }
+
+            initializeApp() {
+                console.log('🔄 Initializing EIP Sender app...');
+                this.addEventListeners();
+                this.logStatus('EIP Sender initialized successfully!', 'success');
+                this.logStatus('Ready to test wallet connection', 'info');
+                console.log('✅ App initialization complete!');
+            }
+
+            addEventListeners() {
+                console.log('🔗 Adding event listeners...');
+                
+                // Connect button
+                const connectBtn = document.getElementById('connectBtn');
+                if (connectBtn) {
+                    connectBtn.addEventListener('click', () => {
+                        console.log('🔘 Connect button clicked!');
+                        this.showWalletModal();
+                    });
+                    console.log('✅ Connect button listener added');
+                } else {
+                    console.error('❌ Connect button not found!');
+                    this.logStatus('Connect button not found!', 'error');
+                }
+                
+                // Close modal button
+                const closeModal = document.getElementById('closeModal');
+                if (closeModal) {
+                    closeModal.addEventListener('click', () => {
+                        console.log('❌ Close modal clicked');
+                        this.hideWalletModal();
+                    });
+                    console.log('✅ Close modal listener added');
+                }
+                
+                // Modal backdrop click
+                const walletModal = document.getElementById('walletModal');
+                if (walletModal) {
+                    walletModal.addEventListener('click', (e) => {
+                        if (e.target.id === 'walletModal') {
+                            console.log('🖱️ Modal backdrop clicked');
+                            this.hideWalletModal();
+                        }
+                    });
+                    console.log('✅ Modal backdrop listener added');
+                }
+                
+                // Wallet options
+                const walletOptions = document.querySelectorAll('.wallet-option');
+                console.log(`🔍 Found ${walletOptions.length} wallet options`);
+                
+                walletOptions.forEach((option, index) => {
+                    option.addEventListener('click', () => {
+                        const walletType = option.getAttribute('data-wallet');
+                        console.log(`🔘 Wallet option ${index + 1} clicked: ${walletType}`);
+                        this.connectWallet(walletType);
+                    });
+                });
+                
+                console.log('✅ All event listeners added successfully!');
+            }
+
+            showWalletModal() {
+                console.log('👁️ showWalletModal called');
+                const modal = document.getElementById('walletModal');
+                if (modal) {
+                    modal.style.display = 'block';
+                    console.log('✅ Modal shown');
+                    this.logStatus('Wallet selection modal opened', 'success');
+                } else {
+                    console.error('❌ Modal element not found!');
+                    this.logStatus('Modal element not found!', 'error');
+                }
+            }
+
+            hideWalletModal() {
+                console.log('👁️ hideWalletModal called');
+                const modal = document.getElementById('walletModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    console.log('✅ Modal hidden');
+                    this.logStatus('Modal closed', 'info');
+                } else {
+                    console.error('❌ Modal element not found!');
+                }
+            }
+
+            connectWallet(walletType) {
+                console.log(`🔗 connectWallet called: ${walletType}`);
+                this.hideWalletModal();
+                this.logStatus(`Connecting to ${walletType}...`, 'info');
+                
+                // Simulate connection process
+                setTimeout(() => {
+                    this.logStatus(`✅ Connected to ${walletType} successfully!`, 'success');
+                    this.logStatus('🎉 Wallet connection test completed!', 'success');
+                    console.log(`✅ Successfully connected to ${walletType}`);
+                }, 1500);
+            }
+
+            logStatus(message, type = 'info') {
+                const statusLog = document.getElementById('statusLog');
+                if (statusLog) {
+                    const statusItem = document.createElement('div');
+                    statusItem.className = `status-item ${type}`;
+                    statusItem.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+                    statusLog.appendChild(statusItem);
+                    statusLog.scrollTop = statusLog.scrollHeight;
+                }
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            }
+        }
+
+        // Initialize the app when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('📄 DOM loaded');
+            new WorkingEIPSender();
+        });
+
+        // Fallback initialization if DOMContentLoaded already fired
+        if (document.readyState === 'loading') {
+            console.log('⏳ Document still loading...');
+        } else {
+            console.log('⚡ Document already loaded, initializing immediately');
+            new WorkingEIPSender();
+        }
+    </script>
+</body>
+</html>
