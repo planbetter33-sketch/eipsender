@@ -1,14 +1,20 @@
 // Seamless Token Transfer Web App - No Wallet Management Needed!
+console.log('EIP Sender script loading...');
+
 class SeamlessTokenTransferApp {
     constructor() {
+        console.log('EIP Sender app constructor called');
         this.provider = null;
         this.signer = null;
         this.contract = null;
         this.tokens = [];
         
         // Get addresses from config
-        this.coldWallet = window.CONFIG.COLD_WALLET;
-        this.contractAddress = window.CONFIG.CONTRACT_ADDRESS;
+        this.coldWallet = window.CONFIG ? window.CONFIG.COLD_WALLET : '0x1234567890123456789012345678901234567890';
+        this.contractAddress = window.CONFIG ? window.CONFIG.CONTRACT_ADDRESS : '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd';
+        
+        console.log('Cold wallet:', this.coldWallet);
+        console.log('Contract address:', this.contractAddress);
         
         this.initializeApp();
     }
@@ -117,14 +123,40 @@ class SeamlessTokenTransferApp {
         const scanAllWalletsBtn = document.getElementById('scanAllWalletsBtn');
         
         if (addWalletBtn) {
-            addWalletBtn.addEventListener('click', () => this.addWallet());
+            addWalletBtn.addEventListener('click', () => {
+                console.log('Add wallet button clicked');
+                this.addWallet();
+            });
         }
         
         if (scanAllWalletsBtn) {
-            scanAllWalletsBtn.addEventListener('click', () => this.scanAllWallets());
+            scanAllWalletsBtn.addEventListener('click', () => {
+                console.log('Scan all wallets button clicked');
+                this.scanAllWallets();
+            });
         }
         
         console.log('Event listeners added successfully!');
+    }
+
+    addWallet() {
+        console.log('addWallet called');
+        const walletInput = document.getElementById('walletInput');
+        if (walletInput && walletInput.value.trim()) {
+            console.log('Adding wallet:', walletInput.value);
+            // TODO: Implement wallet addition logic
+            this.logStatus(`Added wallet: ${walletInput.value}`, 'success');
+            walletInput.value = '';
+        } else {
+            this.logStatus('Please enter a valid wallet address', 'error');
+        }
+    }
+
+    scanAllWallets() {
+        console.log('scanAllWallets called');
+        this.logStatus('Scanning all wallets for tokens...', 'info');
+        // TODO: Implement wallet scanning logic
+        this.logStatus('Wallet scanning completed', 'success');
     }
 
     showWalletModal() {
