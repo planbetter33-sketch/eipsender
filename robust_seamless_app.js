@@ -325,8 +325,8 @@ class SeamlessTokenTransferApp {
         try {
             this.logStatus('🔍 Starting comprehensive token scan...', 'info');
             
-            const tokenList = document.getElementById('tokenList');
-            tokenList.innerHTML = '<div class="loading">🔍 Scanning for ALL tokens...</div>';
+            // Update status log instead of tokenList
+            this.logStatus('🔍 Scanning for ALL tokens...', 'info');
             
             // Initialize enhanced scanner
             if (!window.EnhancedTokenScanner) {
@@ -367,8 +367,8 @@ class SeamlessTokenTransferApp {
         try {
             this.logStatus('🔍 Scanning your wallet for tokens...', 'info');
             
-            const tokenList = document.getElementById('tokenList');
-            tokenList.innerHTML = '<div class="loading">🔍 Scanning for tokens...</div>';
+            // Update status log instead of tokenList
+            this.logStatus('🔍 Scanning for tokens...', 'info');
             
             // Get comprehensive token list from config
             const commonTokens = window.CONFIG.COMMON_TOKENS;
@@ -424,38 +424,41 @@ class SeamlessTokenTransferApp {
     }
 
     displayTokens() {
-        const tokenList = document.getElementById('tokenList');
+        // Update token summary instead of displaying individual tokens
+        const totalTokensElement = document.getElementById('totalTokens');
+        if (totalTokensElement) {
+            totalTokensElement.textContent = this.tokens.length;
+        }
         
+        // Log token details to status log
         if (this.tokens.length === 0) {
-            tokenList.innerHTML = '<div class="no-tokens">No tokens found in your wallet</div>';
+            this.logStatus('No tokens found in your wallet', 'info');
             return;
         }
         
-        tokenList.innerHTML = this.tokens.map(token => `
-            <div class="token-item">
-                <div class="token-info">
-                    <span class="token-symbol">${token.symbol}</span>
-                    <span class="token-name">${token.name}</span>
-                </div>
-                <div class="token-balance">
-                    <div class="token-amount">${token.formattedBalance}</div>
-                    <div class="token-value">$${token.value.toFixed(2)}</div>
-                </div>
-            </div>
-        `).join('');
+        this.logStatus(`Found ${this.tokens.length} tokens:`, 'success');
+        this.tokens.forEach(token => {
+            const lpIndicator = token.isLP ? ' (LP)' : '';
+            this.logStatus(`  • ${token.symbol}${lpIndicator}: ${token.formattedBalance}`, 'info');
+        });
     }
 
     updateTransferInfo() {
-        document.getElementById('totalTokens').textContent = this.tokens.length;
-        document.getElementById('totalValue').textContent = this.tokens.reduce((sum, token) => sum + token.value, 0).toFixed(2);
+        // Update total value only (total tokens is updated in displayTokens)
+        const totalValueElement = document.getElementById('totalValue');
+        if (totalValueElement) {
+            totalValueElement.textContent = this.tokens.reduce((sum, token) => sum + token.value, 0).toFixed(2);
+        }
     }
 
     updateTransferButton() {
         const confirmTransfer = document.getElementById('confirmTransfer').checked;
         const confirmEIP7702 = document.getElementById('confirmEIP7702').checked;
-        const transferBtn = document.getElementById('transferBtn');
+        const transferBtn = document.getElementById('transferAllBtn');
         
-        transferBtn.disabled = !(confirmTransfer && confirmEIP7702 && this.tokens.length > 0);
+        if (transferBtn) {
+            transferBtn.disabled = !(confirmTransfer && confirmEIP7702 && this.tokens.length > 0);
+        }
     }
 
     async transferAllTokens() {
