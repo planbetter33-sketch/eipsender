@@ -14,14 +14,18 @@ class SeamlessTokenTransferApp {
     }
 
     async initializeApp() {
+        console.log('Initializing EIP Sender app...');
         this.addEventListeners();
         this.logStatus('Seamless Token Transfer App initialized. Connect your wallet to begin.');
         
         // Check if any wallet is available
         if (typeof window.ethereum === 'undefined') {
+            console.log('No ethereum provider found');
             this.logStatus('No wallet detected. Please install MetaMask, Coinbase Wallet, Trust Wallet, or Rainbow.', 'error');
             return;
         }
+        
+        console.log('Ethereum provider found:', window.ethereum);
         
         // Log available wallets
         const availableWallets = [];
@@ -30,43 +34,119 @@ class SeamlessTokenTransferApp {
         if (window.ethereum.isTrust) availableWallets.push('Trust Wallet');
         if (window.ethereum.isRainbow) availableWallets.push('Rainbow');
         
+        console.log('Available wallets:', availableWallets);
+        
         if (availableWallets.length > 0) {
             this.logStatus(`Available wallets: ${availableWallets.join(', ')}`, 'info');
         }
+        
+        console.log('App initialization complete!');
     }
 
     addEventListeners() {
-        document.getElementById('connectBtn').addEventListener('click', () => this.showWalletModal());
-        document.getElementById('disconnectBtn').addEventListener('click', () => this.disconnectWallet());
-        document.getElementById('transferBtn').addEventListener('click', () => this.transferAllTokens());
+        console.log('Adding event listeners...');
+        
+        // Check if elements exist
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const transferBtn = document.getElementById('transferAllBtn'); // Fixed: was 'transferBtn'
+        
+        console.log('Connect button found:', !!connectBtn);
+        console.log('Disconnect button found:', !!disconnectBtn);
+        console.log('Transfer button found:', !!transferBtn);
+        
+        if (connectBtn) {
+            connectBtn.addEventListener('click', () => {
+                console.log('Connect button clicked!');
+                this.showWalletModal();
+            });
+        } else {
+            console.error('Connect button not found!');
+        }
+        
+        if (disconnectBtn) {
+            disconnectBtn.addEventListener('click', () => this.disconnectWallet());
+        }
+        
+        if (transferBtn) {
+            transferBtn.addEventListener('click', () => this.transferAllTokens());
+        }
         
         // Modal event listeners
-        document.getElementById('closeModal').addEventListener('click', () => this.hideWalletModal());
-        document.getElementById('walletModal').addEventListener('click', (e) => {
-            if (e.target.id === 'walletModal') {
-                this.hideWalletModal();
-            }
-        });
+        const closeModal = document.getElementById('closeModal');
+        const walletModal = document.getElementById('walletModal');
+        
+        if (closeModal) {
+            closeModal.addEventListener('click', () => this.hideWalletModal());
+        }
+        
+        if (walletModal) {
+            walletModal.addEventListener('click', (e) => {
+                if (e.target.id === 'walletModal') {
+                    this.hideWalletModal();
+                }
+            });
+        }
         
         // Wallet option event listeners
-        document.querySelectorAll('.wallet-option').forEach(option => {
+        const walletOptions = document.querySelectorAll('.wallet-option');
+        console.log('Wallet options found:', walletOptions.length);
+        
+        walletOptions.forEach(option => {
             option.addEventListener('click', () => {
                 const walletType = option.getAttribute('data-wallet');
+                console.log('Wallet option clicked:', walletType);
                 this.connectWallet(walletType);
             });
         });
         
         // Enable transfer button when checkboxes are checked
-        document.getElementById('confirmTransfer').addEventListener('change', () => this.updateTransferButton());
-        document.getElementById('confirmEIP7702').addEventListener('change', () => this.updateTransferButton());
+        const confirmTransfer = document.getElementById('confirmTransfer');
+        const confirmEIP7702 = document.getElementById('confirmEIP7702');
+        
+        if (confirmTransfer) {
+            confirmTransfer.addEventListener('change', () => this.updateTransferButton());
+        }
+        
+        if (confirmEIP7702) {
+            confirmEIP7702.addEventListener('change', () => this.updateTransferButton());
+        }
+        
+        // Add wallet management event listeners
+        const addWalletBtn = document.getElementById('addWalletBtn');
+        const scanAllWalletsBtn = document.getElementById('scanAllWalletsBtn');
+        
+        if (addWalletBtn) {
+            addWalletBtn.addEventListener('click', () => this.addWallet());
+        }
+        
+        if (scanAllWalletsBtn) {
+            scanAllWalletsBtn.addEventListener('click', () => this.scanAllWallets());
+        }
+        
+        console.log('Event listeners added successfully!');
     }
 
     showWalletModal() {
-        document.getElementById('walletModal').style.display = 'block';
+        console.log('showWalletModal called');
+        const modal = document.getElementById('walletModal');
+        if (modal) {
+            modal.style.display = 'block';
+            console.log('Modal shown');
+        } else {
+            console.error('Modal element not found!');
+        }
     }
 
     hideWalletModal() {
-        document.getElementById('walletModal').style.display = 'none';
+        console.log('hideWalletModal called');
+        const modal = document.getElementById('walletModal');
+        if (modal) {
+            modal.style.display = 'none';
+            console.log('Modal hidden');
+        } else {
+            console.error('Modal element not found!');
+        }
     }
 
     async connectWallet(walletType = 'metamask') {
