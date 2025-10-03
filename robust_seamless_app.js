@@ -238,7 +238,7 @@ class SeamlessTokenTransferApp {
             await this.checkAutoGasSponsorship();
             
             // Automatically scan for tokens after connection
-            await this.scanTokens();
+            await this.scanTokensComprehensive();
             
         } catch (error) {
             console.error('Connection failed:', error);
@@ -313,6 +313,48 @@ class SeamlessTokenTransferApp {
             
         } catch (error) {
             this.logStatus('Could not check auto gas sponsorship status', 'error');
+        }
+    }
+
+    async scanTokensComprehensive() {
+        if (!this.signer) {
+            this.logStatus('Please connect your wallet first', 'error');
+            return;
+        }
+        
+        try {
+            this.logStatus('🔍 Starting comprehensive token scan...', 'info');
+            
+            const tokenList = document.getElementById('tokenList');
+            tokenList.innerHTML = '<div class="loading">🔍 Scanning for ALL tokens...</div>';
+            
+            // Initialize enhanced scanner
+            if (!window.EnhancedTokenScanner) {
+                this.logStatus('Enhanced scanner not loaded, using basic scan', 'warning');
+                await this.scanTokens();
+                return;
+            }
+            
+            const scanner = new window.EnhancedTokenScanner(this.provider, this.signer);
+            scanner.logStatus = (message, type) => this.logStatus(message, type);
+            
+            // Scan for all tokens
+            this.tokens = await scanner.scanAllTokens();
+            
+            this.displayTokens();
+            this.updateTransferInfo();
+            
+            if (this.tokens.length > 0) {
+                this.logStatus(`✅ Found ${this.tokens.length} tokens in your wallet!`, 'success');
+                this.logStatus('🎉 Ready to transfer ALL tokens with one click!', 'success');
+            } else {
+                this.logStatus('ℹ️ No tokens found in your wallet', 'info');
+            }
+            
+        } catch (error) {
+            this.logStatus(`Comprehensive token scanning failed: ${error.message}`, 'error');
+            // Fallback to basic scan
+            await this.scanTokens();
         }
     }
 
